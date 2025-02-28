@@ -54,8 +54,24 @@ const Sidebar = ({ className = "" }: SidebarProps) => {
         className,
       )}
     >
+      {/* Logo */}
+      <div className="flex items-center mb-6 px-2">
+        <div className="h-10 w-10 rounded-full border-2 border-teal-500 flex items-center justify-center bg-white overflow-hidden">
+          <img
+            src="https://api.dicebear.com/7.x/avataaars/svg?seed=felicidad"
+            alt="Logo"
+            className="h-8 w-8"
+            onError={(e) => {
+              e.currentTarget.src =
+                "https://api.dicebear.com/7.x/initials/svg?seed=F";
+            }}
+          />
+        </div>
+        <h1 className="ml-2 text-xl font-bold text-teal-600">Felicidad</h1>
+      </div>
+
       {/* Navigation links */}
-      <nav className="flex-1 mt-4">
+      <nav className="flex-1">
         <ul className="space-y-2">
           {navigationItems.map((item) => {
             const isActive = currentPath === item.path;
