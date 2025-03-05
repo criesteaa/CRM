@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Search, Filter } from "lucide-react";
+import { Search, Filter, Plus } from "lucide-react";
 import { Input } from "../ui/input";
 import { Button } from "../ui/button";
 import {
@@ -13,6 +13,7 @@ import {
 interface LeadTableHeaderProps {
   onSearch?: (searchTerm: string) => void;
   onFilterByService?: (service: string) => void;
+  onAddLead?: () => void;
 }
 
 const LeadTableHeader = ({

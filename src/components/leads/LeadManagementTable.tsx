@@ -1,5 +1,12 @@
 import React, { useState } from "react";
-import { Edit, Trash2, ChevronDown, ChevronUp } from "lucide-react";
+import {
+  Edit,
+  Trash2,
+  ChevronDown,
+  ChevronUp,
+  Plus,
+  Calendar,
+} from "lucide-react";
 import {
   Table,
   TableBody,
@@ -12,16 +19,9 @@ import { Button } from "../ui/button";
 import { Badge } from "../ui/badge";
 import LeadTableHeader from "./LeadTableHeader";
 import EditLeadDialog from "./EditLeadDialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "../ui/alert-dialog";
+import AddLeadDialog from "./AddLeadDialog";
+import DeleteLeadDialog from "./DeleteLeadDialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../ui/dialog";
 
 interface Lead {
   id: string;
@@ -86,6 +86,9 @@ const LeadManagementTable = ({
   const [editingLead, setEditingLead] = useState<Lead | null>(null);
   const [deletingLead, setDeletingLead] = useState<Lead | null>(null);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [addDialogOpen, setAddDialogOpen] = useState(false);
+  const [scheduleDialogOpen, setScheduleDialogOpen] = useState(false);
+  const [selectedLead, setSelectedLead] = useState<Lead | null>(null);
 
   // Handle search functionality
   const handleSearch = (searchTerm: string) => {
@@ -167,6 +170,23 @@ const LeadManagementTable = ({
     setDeleteDialogOpen(true);
   };
 
+  // Handle adding a new lead
+  const handleAddLead = (values: Omit<Lead, "id">) => {
+    const newLead = {
+      ...values,
+      id: `${leads.length + 1}`,
+    };
+    const updatedLeads = [...leads, newLead];
+    setLeads(updatedLeads);
+    setFilteredLeads(updatedLeads);
+  };
+
+  // Handle showing schedule
+  const handleShowSchedule = (lead: Lead) => {
+    setSelectedLead(lead);
+    setScheduleDialogOpen(true);
+  };
+
   // Save edited lead
   const handleSaveLead = (updatedLead: Omit<Lead, "id"> & { id?: string }) => {
     const updatedLeads = leads.map((lead) =>
@@ -215,6 +235,7 @@ const LeadManagementTable = ({
       <LeadTableHeader
         onSearch={handleSearch}
         onFilterByService={handleFilterByService}
+        onAddLead={() => setAddDialogOpen(true)}
       />
 
       {/* Main Table */}
@@ -274,8 +295,18 @@ const LeadManagementTable = ({
                       <Button
                         variant="ghost"
                         size="icon"
+                        onClick={() => handleShowSchedule(lead)}
+                        className="h-8 w-8 text-gray-500 hover:text-teal-600"
+                        title="View Schedule"
+                      >
+                        <Calendar className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
                         onClick={() => handleEditLead(lead)}
                         className="h-8 w-8 text-gray-500 hover:text-blue-600"
+                        title="Edit Lead"
                       >
                         <Edit className="h-4 w-4" />
                       </Button>
@@ -284,6 +315,7 @@ const LeadManagementTable = ({
                         size="icon"
                         onClick={() => handleDeleteLead(lead)}
                         className="h-8 w-8 text-gray-500 hover:text-red-600"
+                        title="Delete Lead"
                       >
                         <Trash2 className="h-4 w-4" />
                       </Button>
@@ -312,31 +344,58 @@ const LeadManagementTable = ({
         />
       )}
 
+      {/* Add Lead Dialog */}
+      <AddLeadDialog
+        open={addDialogOpen}
+        onOpenChange={setAddDialogOpen}
+        onSave={handleAddLead}
+      />
+
       {/* Delete Lead Dialog */}
-      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This action cannot be undone. This will permanently delete the
-              lead
-              {deletingLead && <strong> {deletingLead.name}</strong>} and remove
-              their data from our servers.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel onClick={() => setDeletingLead(null)}>
-              Cancel
-            </AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmDelete}
-              className="bg-red-600 hover:bg-red-700"
-            >
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
+      <DeleteLeadDialog
+        open={deleteDialogOpen}
+        onOpenChange={setDeleteDialogOpen}
+        lead={deletingLead || undefined}
+        onConfirm={handleConfirmDelete}
+      />
+
+      {/* Schedule Dialog */}
+      <Dialog open={scheduleDialogOpen} onOpenChange={setScheduleDialogOpen}>
+        <DialogContent className="sm:max-w-[500px] bg-white">
+          <DialogHeader>
+            <DialogTitle className="text-xl font-bold">
+              {selectedLead?.name}'s Schedule
+            </DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-4">
+              <div className="p-4 border border-gray-200 rounded-md">
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 text-teal-600 mr-2" />
+                  <div>
+                    <p className="font-medium">Initial Consultation</p>
+                    <p className="text-sm text-gray-500">Tomorrow, 10:00 AM</p>
+                  </div>
+                </div>
+              </div>
+              <div className="p-4 border border-gray-200 rounded-md">
+                <div className="flex items-center">
+                  <Calendar className="h-5 w-5 text-teal-600 mr-2" />
+                  <div>
+                    <p className="font-medium">Follow-up Meeting</p>
+                    <p className="text-sm text-gray-500">Next Week, 2:00 PM</p>
+                  </div>
+                </div>
+              </div>
+              <div className="mt-4">
+                <Button className="w-full bg-teal-600 hover:bg-teal-700">
+                  <Plus className="h-4 w-4 mr-2" /> Add New Event
+                </Button>
+              </div>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
